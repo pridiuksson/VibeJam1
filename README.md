@@ -1,5 +1,6 @@
-# Firebase Studio
+# VibeJam 1
+https://vibecode.party/hackathons/vibejam-live
 
-This is a NextJS starter in Firebase Studio.
+Tools Used: v0.dev, vibes.diy, emergent.sh and finally firebase
 
-To get started, take a look at src/app/page.tsx.
+link to 60 min screen recording: https://www.youtube.com/watch?v=GGeftkan4Io

@@ -19,7 +19,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Sparkles, Loader2, Trash2, Wand2 } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import type { GenerateFullStoryCharacterOutput} from '@/ai/flows/generate-full-story-character';
+import { conjureNewCharacterStory } from '@/lib/actions';
 
 const createStoryFormSchema = z.object({
   characterName: z.string().min(3, "Character name must be at least 3 characters.").max(50, "Character name cannot exceed 50 characters."),
@@ -27,10 +30,11 @@ const createStoryFormSchema = z.object({
   playerQuest: z.string().min(10, "Player's quest must be at least 10 characters.").max(500, "Player's quest cannot exceed 500 characters."),
   aiDefinition: z.string().min(50, "AI definition must be at least 50 characters.").max(5000, "AI definition cannot exceed 5000 characters."),
   initialGreeting: z.string().min(5, "Initial greeting must be at least 5 characters.").max(300, "Initial greeting cannot exceed 300 characters."),
-  // mainStoryImage will be handled separately, not part of zod schema for now.
   suggestedQuestion1: z.string().max(150, "Suggested question cannot exceed 150 characters.").optional().or(z.literal('')),
   suggestedQuestion2: z.string().max(150, "Suggested question cannot exceed 150 characters.").optional().or(z.literal('')),
   suggestedQuestion3: z.string().max(150, "Suggested question cannot exceed 150 characters.").optional().or(z.literal('')),
+  // mainStoryImage will be handled separately
+  imageHint: z.string().optional().describe("A hint for the main story image, used by AI if generating."),
 });
 
 export type CreateStoryFormValues = z.infer<typeof createStoryFormSchema>;
@@ -38,6 +42,11 @@ export type CreateStoryFormValues = z.infer<typeof createStoryFormSchema>;
 export default function CreateStoryForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [isConjuring, setIsConjuring] = useState(false);
+  const [themeKeywords, setThemeKeywords] = useState('');
+  const [generatedImageHint, setGeneratedImageHint] = useState<string | null>(null);
+
 
   const form = useForm<CreateStoryFormValues>({
     resolver: zodResolver(createStoryFormSchema),
@@ -50,12 +59,13 @@ export default function CreateStoryForm() {
       suggestedQuestion1: '',
       suggestedQuestion2: '',
       suggestedQuestion3: '',
+      imageHint: '',
     },
   });
 
   const onSubmit: SubmitHandler<CreateStoryFormValues> = async (data) => {
     // Placeholder for actual submission logic
-    console.log(data);
+    console.log('Form data submitted:', data);
     // const mainStoryImageFile = (document.getElementById('mainStoryImage') as HTMLInputElement)?.files?.[0];
     // if (mainStoryImageFile) {
     //   console.log('Image to upload:', mainStoryImageFile);
@@ -70,22 +80,107 @@ export default function CreateStoryForm() {
     // router.push('/admin/dashboard'); // Example
   };
 
+  const handleConjureStory = () => {
+    setIsConjuring(true);
+    setGeneratedImageHint(null);
+    startTransition(async () => {
+      const result = await conjureNewCharacterStory({ themeKeywords: themeKeywords || undefined });
+      if (result.success && result.data) {
+        const { imageHint, ...formData } = result.data;
+        form.reset(formData); // Populate form with generated data
+        if (imageHint) {
+          setGeneratedImageHint(imageHint);
+          form.setValue('imageHint', imageHint); // Also set in form if needed for submission
+        }
+        toast({
+          title: 'AI Story Conjured!',
+          description: 'The form has been populated with the generated story details.',
+        });
+      } else {
+        toast({
+          title: 'Conjuring Failed',
+          description: result.error || 'Could not generate AI story. Please try again.',
+          variant: 'destructive',
+        });
+      }
+      setIsConjuring(false);
+    });
+  };
+
+  const handleDiscardAndRegenerate = () => {
+    form.reset(); // Clear existing form data
+    setGeneratedImageHint(null);
+    handleConjureStory(); // Conjure new story
+  };
+  
+  const hasGeneratedContent = !!form.formState.dirtyFields.characterName; // Check if form has been populated by AI
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Define New AI Character & Story</h1>
-          <p className="text-muted-foreground">Fill in the details below to bring a new interactive story to life.</p>
+          <p className="text-muted-foreground">Fill in the details below or use the AI generator to bring a new interactive story to life.</p>
         </div>
         <div className="flex space-x-2 self-end sm:self-center">
           <Button variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button type="submit" form="create-story-form" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : 'Save Story'}
+          <Button type="submit" form="create-story-form" disabled={isPending || form.formState.isSubmitting}>
+            { (isPending || form.formState.isSubmitting) ? 'Saving...' : 'Save Story'}
           </Button>
         </div>
       </div>
+
+      <Card className="shadow-lg rounded-xl border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-6 w-6 text-accent" />
+            AI Story Generator
+          </CardTitle>
+          <CardDescription>
+            Optionally provide a theme or keywords, then let AI conjure a character and story setup for you.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="themeKeywords">Theme/Keywords (Optional)</Label>
+            <Input 
+              id="themeKeywords"
+              placeholder="e.g., 'friendly alien AI,' 'haunted artifact AI'" 
+              value={themeKeywords}
+              onChange={(e) => setThemeKeywords(e.target.value)}
+              disabled={isConjuring}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={handleConjureStory} disabled={isConjuring} className="w-full sm:w-auto">
+              {isConjuring ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Conjuring...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {hasGeneratedContent ? 'Regenerate with Theme' : 'Conjure AI Character & Story!'}
+                </>
+              )}
+            </Button>
+            {hasGeneratedContent && (
+               <Button onClick={handleDiscardAndRegenerate} variant="outline" disabled={isConjuring} className="w-full sm:w-auto">
+                {isConjuring ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Discard & Regenerate
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Form {...form}>
         <form id="create-story-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -206,6 +301,11 @@ export default function CreateStoryForm() {
             <CardContent className="space-y-6">
                <FormItem>
                 <FormLabel htmlFor="mainStoryImage">Upload Main Story Image</FormLabel>
+                 {generatedImageHint && (
+                    <FormDescription className="text-accent italic">
+                      AI Suggested Image Hint: "{generatedImageHint}" (Use this to find or create an image)
+                    </FormDescription>
+                  )}
                 <FormControl>
                   <div className="flex items-center justify-center w-full">
                     <label
@@ -223,14 +323,27 @@ export default function CreateStoryForm() {
                     </label>
                   </div>
                 </FormControl>
-                <FormDescription>This image will be featured on the story feed and chat screen.</FormDescription>
-                {/* Add FormMessage here if Zod schema handles file validation */}
+                <FormDescription>This image will be featured on the story feed and chat screen.
+                 
+                </FormDescription>
+                 <FormField
+                    control={form.control}
+                    name="imageHint"
+                    render={({ field }) => (
+                      <FormItem className="hidden">
+                        <FormLabel>Image Hint (for AI)</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
               </FormItem>
 
               <div>
                 <FormLabel>Suggested Player Questions (Optional)</FormLabel>
                 <FormDescription className="mb-2">
-                  Provide up to 3 questions to guide users if they need a hint.
+                  Provide up to 3 questions to guide users if they need a hint. AI may also generate these.
                 </FormDescription>
                 <div className="space-y-4">
                   <FormField
@@ -278,11 +391,16 @@ export default function CreateStoryForm() {
           </Card>
           
           <div className="flex justify-end space-x-2 pt-4">
-             <Button variant="outline" onClick={() => router.back()} type="button">
+             <Button variant="outline" onClick={() => router.back()} type="button" disabled={isConjuring || form.formState.isSubmitting || isPending}>
                 Cancel
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Saving...' : 'Save Story'}
+            <Button type="submit" disabled={isConjuring || form.formState.isSubmitting || isPending}>
+                {(isConjuring || form.formState.isSubmitting || isPending) ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : 'Save Story'}
             </Button>
           </div>
 
@@ -291,3 +409,4 @@ export default function CreateStoryForm() {
     </div>
   );
 }
+

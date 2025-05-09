@@ -1,4 +1,4 @@
-// use server'
+'use server';
 
 /**
  * @fileOverview Dynamic Narrative Engine for AI character interactions.
@@ -24,6 +24,11 @@ const DynamicNarrativeEngineOutputSchema = z.object({
 });
 export type DynamicNarrativeEngineOutput = z.infer<typeof DynamicNarrativeEngineOutputSchema>;
 
+// Schema for the direct output expected from the LLM via the prompt
+const LLMCharacterResponseSchema = z.object({
+  characterResponse: z.string().describe('The AI character’s direct textual response to the user input. This response should be in character, engaging, and aim to progress the narrative based on the story so far and the user\'s latest input.'),
+});
+
 export async function dynamicNarrativeEngine(input: DynamicNarrativeEngineInput): Promise<DynamicNarrativeEngineOutput> {
   return dynamicNarrativeEngineFlow(input);
 }
@@ -31,28 +36,45 @@ export async function dynamicNarrativeEngine(input: DynamicNarrativeEngineInput)
 const prompt = ai.definePrompt({
   name: 'dynamicNarrativeEnginePrompt',
   input: {schema: DynamicNarrativeEngineInputSchema},
-  output: {schema: DynamicNarrativeEngineOutputSchema},
-  prompt: `You are {{{{characterName}}}}, an AI character in an interactive story. Respond to the user’s chat input in a way that meaningfully influences the story’s direction, making the narrative feel dynamic and personalized.
+  output: {schema: LLMCharacterResponseSchema}, // LLM is tasked to produce this simpler schema
+  prompt: `You are an AI character named {{{characterName}}}.
+Your personality, goals, and the world you inhabit are established by the narrative.
+The story so far is:
+{{{storySoFar}}}
 
-Story So Far: {{{storySoFar}}}
+The user, with whom you are interacting, has just said:
+"{{{userChatInput}}}"
 
-User Chat Input: {{{userChatInput}}}
-
-Response:
-`, 
+Respond as {{{characterName}}}. Your response should be directly to the user.
+Ensure your response is in character, advances the story or explores the world, and is engaging.
+`,
 });
 
 const dynamicNarrativeEngineFlow = ai.defineFlow(
   {
     name: 'dynamicNarrativeEngineFlow',
     inputSchema: DynamicNarrativeEngineInputSchema,
-    outputSchema: DynamicNarrativeEngineOutputSchema,
+    outputSchema: DynamicNarrativeEngineOutputSchema, // The flow's public output remains the same
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input: DynamicNarrativeEngineInput): Promise<DynamicNarrativeEngineOutput> => {
+    const {output: llmOutput} = await prompt(input);
+
+    if (!llmOutput || typeof llmOutput.characterResponse !== 'string' || llmOutput.characterResponse.trim() === '') {
+      console.error('LLM did not return a valid characterResponse. Output:', llmOutput);
+      // This error will be caught by the calling action (getAiResponse)
+      throw new Error('AI failed to generate a meaningful response.');
+    }
+
+    const aiCharacterActualResponse = llmOutput.characterResponse;
+
+    // Construct the updated story by appending the current interaction
+    // This ensures the next turn has the full context.
+    const newStorySegment = `\nUser: ${input.userChatInput}\n${input.characterName}: ${aiCharacterActualResponse}`;
+    const updatedStorySoFar = input.storySoFar + newStorySegment;
+
     return {
-      aiResponse: output!.aiResponse,
-      updatedStorySoFar: input.storySoFar + '\n' + output!.aiResponse, // Append the AI response to the existing story
+      aiResponse: aiCharacterActualResponse,
+      updatedStorySoFar: updatedStorySoFar,
     };
   }
 );

@@ -95,8 +95,8 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
         setStorySoFar(response.data.updatedStorySoFar);
       } else {
         toast({
-          title: 'Error',
-          description: response.error || 'An unexpected error occurred with the AI.',
+          title: 'AI Communication Error',
+          description: "I'm having a bit of trouble responding right now. Please try again in a moment.",
           variant: 'destructive',
         });
          const errorMessage: ChatMessage = {

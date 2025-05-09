@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Character, ChatMessage } from '@/lib/types';
@@ -95,7 +94,7 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
         setStorySoFar(response.data.updatedStorySoFar);
       } else {
         toast({
-          title: 'AI Communication Error',
+          title: 'Story Interrupted',
           description: "I'm having a bit of trouble responding right now. Please try again in a moment.",
           variant: 'destructive',
         });

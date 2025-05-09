@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Character, ChatMessage } from '@/lib/types';
@@ -6,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, SendHorizonal, Loader2, MessageSquareWarning } from 'lucide-react';
+import { Bot, User, SendHorizonal, Loader2, MessageSquareWarning, Info } from 'lucide-react';
 import { getAiResponse } from '@/lib/actions';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
 
 interface ChatInterfaceProps {
   character: Character;
@@ -111,7 +111,7 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] max-w-3xl mx-auto bg-card rounded-xl shadow-2xl overflow-hidden border">
+    <div className="flex flex-col flex-grow max-w-3xl mx-auto bg-card rounded-xl shadow-2xl overflow-hidden border">
       <header className="p-4 border-b flex items-center gap-4 bg-primary-foreground">
         <Avatar className="h-12 w-12 border-2 border-primary">
           <AvatarImage src={character.imageUrl} alt={character.name} data-ai-hint={character.imageHint || 'character portrait'} />
@@ -134,13 +134,13 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
               )}
             >
               {msg.sender === 'ai' && (
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 self-end">
                   <AvatarImage src={character.imageUrl} alt={character.name} />
                   <AvatarFallback><Bot size={18}/></AvatarFallback>
                 </Avatar>
               )}
                {msg.sender === 'system' && (
-                 <Avatar className="h-8 w-8 bg-accent text-accent-foreground">
+                 <Avatar className="h-8 w-8 bg-accent text-accent-foreground self-center">
                   <AvatarFallback><MessageSquareWarning size={18}/></AvatarFallback>
                 </Avatar>
                )}
@@ -151,7 +151,7 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
                     ? 'bg-primary text-primary-foreground rounded-br-none'
                     : msg.sender === 'ai' 
                       ? 'bg-secondary text-secondary-foreground rounded-bl-none'
-                      : 'bg-muted text-muted-foreground text-sm italic w-full text-center rounded-none shadow-none'
+                      : 'bg-muted text-muted-foreground text-sm italic w-full text-center rounded-lg shadow-none'
                 )}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
@@ -160,20 +160,23 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
                 </p>}
               </div>
               {msg.sender === 'user' && (
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 self-end">
                   <AvatarFallback><User size={18}/></AvatarFallback>
                 </Avatar>
               )}
             </div>
           ))}
           {isAiTyping && (
-            <div className="flex items-end gap-2 justify-start">
+            <div className="flex items-center gap-2 justify-start py-2">
               <Avatar className="h-8 w-8">
                  <AvatarImage src={character.imageUrl} alt={character.name} />
                  <AvatarFallback><Bot size={18}/></AvatarFallback>
               </Avatar>
-              <div className="max-w-[70%] p-3 rounded-2xl shadow-md bg-secondary text-secondary-foreground rounded-bl-none">
-                <Loader2 className="h-5 w-5 animate-spin" />
+              <div className="p-3 rounded-2xl shadow-sm bg-muted text-muted-foreground rounded-bl-none">
+                <p className="text-sm italic flex items-center">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  {character.name} is thinking...
+                </p>
               </div>
             </div>
           )}
@@ -182,14 +185,24 @@ export default function ChatInterface({ character }: ChatInterfaceProps) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="p-4 border-t bg-primary-foreground">
         <div className="flex items-center gap-2">
+          <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-accent rounded-full flex-shrink-0"
+              aria-label="Show hints"
+              // onClick={() => toast({ title: "Hints", description: "Suggested questions feature coming soon!"})} TODO: Implement hint functionality
+            >
+              <Info className="h-5 w-5" />
+            </Button>
           <Input
             {...register('message')}
-            placeholder="Tell your story..."
+            placeholder={`Chat with ${character.name}...`}
             autoComplete="off"
             className="flex-grow rounded-full focus-visible:ring-accent"
             disabled={isPending || isAiTyping}
           />
-          <Button type="submit" size="icon" className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isPending || isAiTyping}>
+          <Button type="submit" size="icon" className="rounded-full bg-accent hover:bg-accent/90 text-accent-foreground flex-shrink-0" disabled={isPending || isAiTyping}>
             {isPending || isAiTyping ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizonal className="h-5 w-5" />}
             <span className="sr-only">Send message</span>
           </Button>

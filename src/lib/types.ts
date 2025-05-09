@@ -8,6 +8,7 @@ export interface Character {
   initialGreeting: string; // First message from AI
   storyPrompt: string; // Backend prompt for AI (used by admin)
   initialStoryContext: string; // The "storySoFar" to begin with
+  questObjective?: string; // User's goal in the interaction
 }
 
 export interface ChatMessage {

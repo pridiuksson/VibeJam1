@@ -11,6 +11,7 @@ export const placeholderCharacters: Character[] = [
     initialGreeting: 'Greetings, traveler. The stars have foretold your arrival. What secrets of the cosmos do you seek?',
     storyPrompt: 'Elara is an ancient, wise, mystical being who guides the player to find the Heart of the Cosmos. She speaks poetically and knows much about celestial events.',
     initialStoryContext: 'The user has just met Elara, a mysterious figure who seems to know about their destiny related to the stars.',
+    questObjective: 'Discover the location of the legendary Heart of the Cosmos.',
   },
   {
     id: 'fenrir',
@@ -22,6 +23,7 @@ export const placeholderCharacters: Character[] = [
     initialGreeting: 'You tread in a place of shadow and sorrow, little one. Why have you come to my blighted domain?',
     storyPrompt: 'Fenrir is a cunning, slightly distrustful but ultimately noble spirit wolf. He wants to lift a curse from his forest and needs the player\'s help to find three lost relics.',
     initialStoryContext: 'The user has wandered into a dark, cursed forest and encountered Fenrir, a large, intelligent wolf who speaks with a human-like voice.',
+    questObjective: 'Find the three lost relics to break the ancient curse upon the forest.',
   },
   {
     id: 'seraphina',
@@ -33,6 +35,7 @@ export const placeholderCharacters: Character[] = [
     initialGreeting: 'Anomaly detected. Your presence here is... unexpected. State your purpose before you cause a chronal disruption.',
     storyPrompt: 'Seraphina is a meticulous and serious guardian of time. She is trying to prevent a rogue agent from changing history and needs the player to gather clues across different eras.',
     initialStoryContext: 'The user has suddenly found themselves in a strange, timeless library. Seraphina, a sharply dressed woman, appears and questions their presence.',
+    questObjective: 'Gather clues across different eras to stop the rogue historian from altering a pivotal event.',
   },
   {
     id: 'korg',
@@ -44,5 +47,6 @@ export const placeholderCharacters: Character[] = [
     initialGreeting: 'Oh! Hello there, little morsel! Oops, I mean, friend! Korg is on a big cook-venture. Maybe you help Korg find yummy things?',
     storyPrompt: 'Korg is a gentle, friendly, and slightly naive Golem Chef on a quest for rare ingredients. He needs help navigating social situations and finding clues to the location of the legendary Sunpetal Bloom.',
     initialStoryContext: 'The user stumbles upon a clearing where a large, mossy golem is trying to cook something in a comically oversized cauldron.',
+    questObjective: 'Collect rare ingredients and find the legendary Sunpetal Bloom to create the ultimate dish.',
   },
 ];

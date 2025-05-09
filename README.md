@@ -3,4 +3,9 @@ https://vibecode.party/hackathons/vibejam-live
 
 Tools Used: v0.dev, vibes.diy, emergent.sh and finally firebase
 
+Results:
+v0 in 10 messages: https://v0-magic-stories-design.vercel.app
+firebase: https://studio--magic-tales-ppvms.us-central1.hosted.app
+emergent and vibes.diy didn't produce a viable output
+
 link to 60 min screen recording: https://www.youtube.com/watch?v=GGeftkan4Io

@@ -7,7 +7,7 @@ export default function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center">
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-accent transition-colors">
           <BookMarked className="h-7 w-7" />
-          <h1 className="text-2xl font-bold tracking-tight">Magic Tales</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Magic Stories</h1>
         </Link>
       </div>
     </header>

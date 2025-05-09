@@ -18,6 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { UploadCloud, Sparkles, Loader2, Trash2, Wand2 } from 'lucide-react';
 import { useState, useTransition } from 'react';

@@ -164,7 +164,7 @@ export default function CreateStoryForm() {
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  {hasGeneratedContent ? 'Regenerate with Theme' : 'Conjure AI Character & Story!'}
+                  {hasGeneratedContent ? 'Regenerate with Theme' : 'Magic Button'}
                 </>
               )}
             </Button>
